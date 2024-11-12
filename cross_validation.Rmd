@@ -27,3 +27,56 @@ lidar_df |>
   geom_point()
 ```
 
+## Try to do CV 
+
+We'll compare 3 models -- one linear, one smooth, one wiggly. 
+
+Construct training and testing df. 
+
+```{r}
+train_df = sample_frac(lidar_df, size = .8)
+test_df = anti_join(lidar_df, train_df, by = "id")
+```
+
+Look at these 
+
+```{r}
+ggplot(train_df, aes(x = range, y = logratio)) + 
+  geom_point() + 
+  geom_point(data = test_df, color = "red")
+```
+
+Fit three models 
+
+```{r}
+linear_mod = lm(logratio ~ range, data = train_df)
+smooth_mod = mgcv::gam(logratio ~ s(range), data = train_df)
+wiggly_mod = mgcv::gam(logratio ~ s(range, k = 30), sp = 10e-6, data = train_df)
+```
+
+```{r}
+train_df |> 
+  add_predictions(smooth_mod) |> 
+  ggplot(aes(x = range, y = logratio)) + 
+  geom_point() + 
+  geom_line(aes(y = pred), color = "red")
+```
+
+```{r}
+train_df |> 
+  add_predictions(wiggly_mod) |> 
+  ggplot(aes(x = range, y = logratio)) + 
+  geom_point() + 
+  geom_line(aes(y = pred), color = "red")
+```
+
+
+```{r}
+train_df |> 
+  gather_predictions(linear_mod, smooth_mod, wiggly_mod) |> 
+  mutate(model = fct_inorder(model)) |> 
+  ggplot(aes(x = range, y = logratio)) + 
+  geom_point() + 
+  geom_line(aes(y = pred), color = "red") + 
+  facet_wrap(~model)
+```
