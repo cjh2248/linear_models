@@ -1,0 +1,29 @@
+---
+title: "Cross Validation"
+output: github_document
+date: "2024-11-12"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(modelr)
+library(mgcv)
+
+# install packages 
+install.packages("SemiPar")
+library(SemiPar)
+```
+
+```{r}
+data(lidar)
+
+lidar_df = 
+  lidar |> 
+  as_tibble() |>
+  mutate(id = row_number())
+
+lidar_df |> 
+  ggplot(aes(x = range, y = logratio)) + 
+  geom_point()
+```
+
